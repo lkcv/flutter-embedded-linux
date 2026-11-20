@@ -477,9 +477,11 @@ const wl_pointer_listener ELinuxWindowWayland::kWlPointerListener = {
           case BTN_MIDDLE:
             flutter_button = kFlutterPointerButtonMouseMiddle;
             break;
+          case BTN_SIDE:
           case BTN_BACK:
             flutter_button = kFlutterPointerButtonMouseBack;
             break;
+          case BTN_EXTRA:
           case BTN_FORWARD:
             flutter_button = kFlutterPointerButtonMouseForward;
             break;
