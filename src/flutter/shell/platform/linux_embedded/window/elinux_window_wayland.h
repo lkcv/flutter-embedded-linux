@@ -172,6 +172,7 @@ class ELinuxWindowWayland : public ELinuxWindow, public WindowBindingHandler {
   wl_output* wl_output_;
   wl_shm* wl_shm_;
   std::unordered_map<wl_seat*, seat_inputs> seat_inputs_map_;
+  std::unordered_set<uint32_t> pressed_keys_;
   std::unordered_map<uint32_t, wl_seat*> registry_names_to_seat_ptr_;
   wl_surface* wl_cursor_surface_;
   xdg_wm_base* xdg_wm_base_;

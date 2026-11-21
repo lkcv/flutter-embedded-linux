@@ -604,6 +604,15 @@ const wl_keyboard_listener ELinuxWindowWayland::kWlKeyboardListener = {
 
       auto self = reinterpret_cast<ELinuxWindowWayland*>(data);
       self->serial_ = serial;
+      // Restore keys already held when the window gains keyboard focus.
+      if (self->binding_handler_delegate_) {
+        const auto* held_keys = static_cast<const uint32_t*>(keys->data);
+        for (size_t i = 0; i < keys->size / sizeof(uint32_t); ++i) {
+          if (self->pressed_keys_.insert(held_keys[i]).second) {
+            self->binding_handler_delegate_->OnKey(held_keys[i], true);
+          }
+        }
+      }
     },
     .leave = [](void* data,
                 wl_keyboard* wl_keyboard,
@@ -613,6 +622,14 @@ const wl_keyboard_listener ELinuxWindowWayland::kWlKeyboardListener = {
 
       auto self = reinterpret_cast<ELinuxWindowWayland*>(data);
       self->serial_ = serial;
+      // The compositor won't send key releases after keyboard focus is lost.
+      // Release them now so Flutter doesn't retain a stale Super modifier.
+      if (self->binding_handler_delegate_) {
+        for (uint32_t key : self->pressed_keys_) {
+          self->binding_handler_delegate_->OnKey(key, false);
+        }
+      }
+      self->pressed_keys_.clear();
     },
     .key = [](void* data,
               wl_keyboard* wl_keyboard,
@@ -624,6 +641,11 @@ const wl_keyboard_listener ELinuxWindowWayland::kWlKeyboardListener = {
 
       auto self = reinterpret_cast<ELinuxWindowWayland*>(data);
       self->serial_ = serial;
+      if (state == WL_KEYBOARD_KEY_STATE_PRESSED) {
+        self->pressed_keys_.insert(key);
+      } else {
+        self->pressed_keys_.erase(key);
+      }
       if (self->binding_handler_delegate_) {
         self->binding_handler_delegate_->OnKey(
             key, state == WL_KEYBOARD_KEY_STATE_PRESSED);
