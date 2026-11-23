@@ -23,7 +23,7 @@ class GamepadInput {
   };
   struct Device {
     int fd = -1;
-    std::array<bool, 9> keys{};
+    std::array<bool, 12> keys{};
     std::array<bool, 4> dpad{};
     std::array<bool, 4> hat{};
     std::array<bool, 4> stick{};
@@ -39,7 +39,7 @@ class GamepadInput {
 
   DeviceMap devices_;
   std::future<DeviceMap> scan_future_;
-  std::array<bool, 9> published_{};
+  std::array<bool, 12> published_{};
   std::chrono::steady_clock::time_point next_scan_{};
 };
 

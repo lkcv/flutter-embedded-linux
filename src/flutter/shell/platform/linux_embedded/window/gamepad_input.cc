@@ -13,7 +13,8 @@
 namespace {
 // Keep these names platform-independent for Flutter's BasicMessageChannel.
 constexpr const char* kActions[] = {
-    "up", "right", "down", "left", "confirm", "back", "menu", "l1", "r1"};
+    "up", "right", "down", "left", "confirm", "back", "menu", "l1", "r1",
+    "search", "help", "west"};
 constexpr size_t kBitCount = sizeof(unsigned long) * 8;
 
 bool HasKey(const std::array<unsigned long, KEY_MAX / kBitCount + 1>& bits,
@@ -80,6 +81,9 @@ void GamepadInput::Handle(Device& device, unsigned short type,
       case BTN_START: device.keys[6] = down; break;
       case BTN_TL: device.keys[7] = down; break;
       case BTN_TR: device.keys[8] = down; break;
+      case BTN_NORTH: device.keys[9] = down; break;
+      case BTN_SELECT: device.keys[10] = down; break;
+      case BTN_WEST: device.keys[11] = down; break;
     }
   } else if (type == EV_ABS) {
     switch (code) {
