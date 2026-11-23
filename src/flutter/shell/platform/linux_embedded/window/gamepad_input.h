@@ -5,8 +5,10 @@
 #include <array>
 #include <chrono>
 #include <functional>
+#include <future>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 
 class GamepadInput {
  public:
@@ -29,12 +31,14 @@ class GamepadInput {
     Axis y;
   };
 
-  void Scan();
+  using DeviceMap = std::unordered_map<std::string, Device>;
+  static DeviceMap Scan(const std::unordered_set<std::string>& known);
   void Handle(Device& device, unsigned short type, unsigned short code,
               int value);
   void Publish(bool active, const Callback& callback);
 
-  std::unordered_map<std::string, Device> devices_;
+  DeviceMap devices_;
+  std::future<DeviceMap> scan_future_;
   std::array<bool, 9> published_{};
   std::chrono::steady_clock::time_point next_scan_{};
 };

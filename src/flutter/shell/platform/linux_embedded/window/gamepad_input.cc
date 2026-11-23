@@ -24,17 +24,23 @@ bool HasKey(const std::array<unsigned long, KEY_MAX / kBitCount + 1>& bits,
 }  // namespace
 
 GamepadInput::~GamepadInput() {
+  // An outstanding scan owns its descriptors until its results are collected.
+  if (scan_future_.valid()) {
+    for (const auto& [_, device] : scan_future_.get()) close(device.fd);
+  }
   for (auto& [_, device] : devices_) close(device.fd);
 }
 
-void GamepadInput::Scan() {
+GamepadInput::DeviceMap GamepadInput::Scan(
+    const std::unordered_set<std::string>& known) {
+  DeviceMap discovered;
   DIR* directory = opendir("/dev/input");
-  if (!directory) return;
+  if (!directory) return discovered;
   while (dirent* entry = readdir(directory)) {
     const std::string name(entry->d_name);
     if (name.compare(0, 5, "event") != 0) continue;
     const std::string path = "/dev/input/" + name;
-    if (devices_.count(path)) continue;
+    if (known.count(path)) continue;
     const int fd = open(path.c_str(), O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     if (fd < 0) continue;
     std::array<unsigned long, KEY_MAX / kBitCount + 1> keys{};
@@ -54,9 +60,10 @@ void GamepadInput::Scan() {
       device.y = {(info.minimum + info.maximum) / 2,
                   (info.maximum - info.minimum) / 2};
     }
-    devices_.emplace(path, std::move(device));
+    discovered.emplace(path, std::move(device));
   }
   closedir(directory);
+  return discovered;
 }
 
 void GamepadInput::Handle(Device& device, unsigned short type,
@@ -122,8 +129,26 @@ void GamepadInput::Publish(bool active, const Callback& callback) {
 
 void GamepadInput::Poll(bool active, const Callback& callback) {
   const auto now = std::chrono::steady_clock::now();
-  if (now >= next_scan_) {
-    Scan();
+  // Device discovery may be slow; keep it off the Flutter platform thread.
+  if (scan_future_.valid() &&
+      scan_future_.wait_for(std::chrono::seconds(0)) ==
+          std::future_status::ready) {
+    auto discovered = scan_future_.get();
+    for (auto& [path, device] : discovered) {
+      if (devices_.count(path)) {
+        close(device.fd);
+      } else {
+        devices_.emplace(path, std::move(device));
+      }
+    }
+  }
+  if (!scan_future_.valid() && now >= next_scan_) {
+    std::unordered_set<std::string> known;
+    for (const auto& [path, _] : devices_) known.insert(path);
+    scan_future_ = std::async(std::launch::async,
+                              [known = std::move(known)] {
+                                return Scan(known);
+                              });
     next_scan_ = now + std::chrono::seconds(2);
   }
   for (auto it = devices_.begin(); it != devices_.end();) {
