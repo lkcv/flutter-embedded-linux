@@ -52,6 +52,17 @@ GamepadInput::DeviceMap GamepadInput::Scan(
     }
     Device device;
     device.fd = fd;
+    input_id id{};
+    if (ioctl(fd, EVIOCGID, &id) == 0 && id.vendor == 0x054c) {
+      switch (id.product) {
+        case 0x05c4: case 0x09cc: case 0x0ba0:
+          device.model = Model::dualshock4;
+          break;
+        case 0x0ce6: case 0x0df2:
+          device.model = Model::dualsense;
+          break;
+      }
+    }
     input_absinfo info{};
     if (ioctl(fd, EVIOCGABS(ABS_X), &info) == 0) {
       device.x = {(info.minimum + info.maximum) / 2,
@@ -162,6 +173,18 @@ void GamepadInput::Poll(bool active, const Callback& callback) {
     while ((bytes = read(it->second.fd, &event, sizeof(event))) ==
            sizeof(event)) {
       Handle(it->second, event.type, event.code, event.value);
+      const auto& device = it->second;
+      const bool stickActive = event.type == EV_ABS &&
+          (event.code == ABS_X || event.code == ABS_Y) &&
+          std::any_of(device.stick.begin(), device.stick.end(),
+                      [](bool direction) { return direction; });
+      if (active && ((event.type == EV_KEY && event.value == 1) ||
+                     stickActive) && device.model != last_active_) {
+        last_active_ = device.model;
+        callback(device.model == Model::dualshock4 ? "controller_ds4" :
+                 device.model == Model::dualsense ? "controller_dualsense" :
+                                                    "controller_unknown", true);
+      }
       Publish(active, callback);
     }
     if (bytes == 0 || (bytes < 0 && errno != EAGAIN && errno != EWOULDBLOCK)) {
@@ -173,6 +196,18 @@ void GamepadInput::Poll(bool active, const Callback& callback) {
     } else {
       ++it;
     }
+  }
+  // Report connected Sony models so F1 can show an exact label when possible.
+  unsigned connected = 0;
+  for (const auto& [_, device] : devices_) {
+    if (device.model == Model::dualshock4) connected |= 1;
+    if (device.model == Model::dualsense) connected |= 2;
+  }
+  if (connected != connected_) {
+    connected_ = connected;
+    callback(connected == 1 ? "controllers_ds4" :
+             connected == 2 ? "controllers_dualsense" :
+             connected == 3 ? "controllers_both" : "controllers_none", true);
   }
   Publish(active, callback);
 }

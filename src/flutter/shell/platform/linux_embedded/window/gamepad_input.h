@@ -17,12 +17,15 @@ class GamepadInput {
   void Poll(bool active, const Callback& callback);
 
  private:
+  enum class Model { unknown, dualshock4, dualsense };
+
   struct Axis {
     int center = 0;
     int radius = 0;
   };
   struct Device {
     int fd = -1;
+    Model model = Model::unknown;
     std::array<bool, 12> keys{};
     std::array<bool, 4> dpad{};
     std::array<bool, 4> hat{};
@@ -40,6 +43,8 @@ class GamepadInput {
   DeviceMap devices_;
   std::future<DeviceMap> scan_future_;
   std::array<bool, 12> published_{};
+  Model last_active_ = Model::unknown;
+  unsigned connected_ = 0;
   std::chrono::steady_clock::time_point next_scan_{};
 };
 
