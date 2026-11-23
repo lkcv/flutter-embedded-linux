@@ -8,6 +8,7 @@
 #include <cmath>
 
 #include "flutter/common/constants.h"
+#include "flutter/shell/platform/common/client_wrapper/include/flutter/string_message_codec.h"
 #include "flutter/shell/platform/linux_embedded/logger.h"
 
 namespace flutter {
@@ -275,6 +276,14 @@ void FlutterELinuxView::OnKey(uint32_t key, bool pressed) {
       textinput_handler_->OnKeyPressed(key, code_point);
     }
   }
+}
+
+void FlutterELinuxView::OnGamepadEvent(const char* action, bool pressed) {
+  if (!engine_) return;
+  const auto message = StringMessageCodec::GetInstance().EncodeMessage(
+      std::string(action) + (pressed ? ":down" : ":up"));
+  engine_->SendPlatformMessage("elinux/gamepad", message->data(),
+                               message->size(), nullptr, nullptr);
 }
 
 void FlutterELinuxView::OnKeyModifiers(uint32_t mods_depressed,

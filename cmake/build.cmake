@@ -77,6 +77,7 @@ else()
     "${_wayland_protocols_src_dir}/presentation-time-protocol.c"
     "${_wayland_protocols_src_dir}/xdg-decoration-unstable-v1-protocol.c"
     "src/flutter/shell/platform/linux_embedded/window/elinux_window_wayland.cc"
+    "src/flutter/shell/platform/linux_embedded/window/gamepad_input.cc"
     "src/flutter/shell/platform/linux_embedded/window/native_window_wayland.cc"
     "src/flutter/shell/platform/linux_embedded/window/native_window_wayland_decoration.cc"
     "src/flutter/shell/platform/linux_embedded/window/renderer/elinux_shader.cc"

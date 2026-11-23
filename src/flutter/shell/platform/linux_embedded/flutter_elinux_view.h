@@ -129,6 +129,9 @@ class FlutterELinuxView : public WindowBindingHandlerDelegate {
   void OnKey(uint32_t key, bool pressed) override;
 
   // |WindowBindingHandlerDelegate|
+  void OnGamepadEvent(const char* action, bool pressed) override;
+
+  // |WindowBindingHandlerDelegate|
   void OnVirtualKey(uint32_t code_point) override;
 
   // |WindowBindingHandlerDelegate|

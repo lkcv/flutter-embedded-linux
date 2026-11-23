@@ -120,6 +120,14 @@ const xdg_toplevel_listener ELinuxWindowWayland::kXdgToplevelListener = {
               << "xdg_toplevel_listener.configure: " << width << ", " << height;
 
           auto self = reinterpret_cast<ELinuxWindowWayland*>(data);
+          self->activated_ = false;
+          const auto* active_states = static_cast<const uint32_t*>(states->data);
+          for (size_t i = 0; i < states->size / sizeof(uint32_t); ++i) {
+            if (active_states[i] == XDG_TOPLEVEL_STATE_ACTIVATED) {
+              self->activated_ = true;
+              break;
+            }
+          }
           if (self->current_rotation_ == 90 || self->current_rotation_ == 270) {
             std::swap(width, height);
           }
@@ -1403,6 +1411,11 @@ bool ELinuxWindowWayland::DispatchEvent() {
     wl_display_cancel_read(wl_display_);
   }
 
+  gamepad_input_.Poll(activated_, [this](const char* action, bool pressed) {
+    if (binding_handler_delegate_) {
+      binding_handler_delegate_->OnGamepadEvent(action, pressed);
+    }
+  });
   return true;
 }
 

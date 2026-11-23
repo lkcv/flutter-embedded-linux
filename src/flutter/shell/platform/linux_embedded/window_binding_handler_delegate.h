@@ -84,6 +84,9 @@ class WindowBindingHandlerDelegate {
   // Typically called by currently configured WindowBindingHandler
   virtual void OnKey(uint32_t key, bool pressed) = 0;
 
+  // Normalized controller button transitions (not keyboard events).
+  virtual void OnGamepadEvent(const char* action, bool pressed) = 0;
+
   // Notifies delegate that backing window virtual key has been pressed.
   // Typically called by currently configured WindowBindingHandler
   virtual void OnVirtualKey(uint32_t code_point) = 0;

@@ -14,6 +14,7 @@
 
 #include "flutter/shell/platform/linux_embedded/surface/surface_gl.h"
 #include "flutter/shell/platform/linux_embedded/window/elinux_window.h"
+#include "flutter/shell/platform/linux_embedded/window/gamepad_input.h"
 #include "flutter/shell/platform/linux_embedded/window/native_window_wayland.h"
 #include "flutter/shell/platform/linux_embedded/window/renderer/window_decorations_wayland.h"
 #include "flutter/shell/platform/linux_embedded/window_binding_handler.h"
@@ -158,6 +159,8 @@ class ELinuxWindowWayland : public ELinuxWindow, public WindowBindingHandler {
   bool running_;
   bool wait_for_configure_ = false;
   bool request_redraw_ = false;
+  bool activated_ = false;
+  GamepadInput gamepad_input_;
   bool maximised_;
   uint32_t last_frame_time_;
   bool enable_impeller_ = false;
