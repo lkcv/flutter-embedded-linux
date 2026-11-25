@@ -14,6 +14,7 @@ fi
 cmake -S . -B build \
   -DUSER_PROJECT_PATH=examples/flutter-wayland-client \
   -DFLUTTER_RELEASE=ON \
+  -DUSE_GLES3=ON \
   -DENABLE_VSYNC=ON \
   -DCMAKE_BUILD_TYPE=Release
 cmake --build build --parallel "${JOBS:-$(nproc)}"

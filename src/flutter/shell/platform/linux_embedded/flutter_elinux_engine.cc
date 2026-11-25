@@ -142,6 +142,8 @@ FlutterELinuxEngine::FlutterELinuxEngine(const FlutterProjectBundle& project)
         }
       });
 
+  project_->SetSwitches({"--enable-impeller"});
+
   // Check for impeller support.
   auto& switches = project_->GetSwitches();
   enable_impeller_ = std::find_if(switches.begin(), switches.end(),
